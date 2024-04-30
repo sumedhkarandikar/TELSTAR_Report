@@ -16,6 +16,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 
+
+
 namespace Excel_Utility
 {
     public partial class Form1 : Form
@@ -107,90 +109,125 @@ namespace Excel_Utility
         {
 
             string filePath = selectedFileName;
+            //DataSet1 dataSet = new DataSet1();
+            //DataTable dataTable = new DataTable("DataTable1");
+
+            //using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
+            //{
+            //    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            //    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming you want to read from the first worksheet
+
+            //    int rowCount = worksheet.Dimension.Rows;
+            //    int colCount = worksheet.Dimension.Columns;
+
+            //    // Add columns to DataTable
+            //    for (int col = 1; col <= colCount; col++)
+            //    {
+            //        // Set column names from Excel file headers
+            //        string columnName = worksheet.Cells[1, col].Value?.ToString() ?? "Column" + col;
+            //        //dataTable.Columns.Add(sheet.Cells[1, col].Value?.ToString() ?? $"Column{col}", typeof(string));
+            //         foreach (DataColumn column in dataTable.Columns)
+            //    {
+            //        column.ColumnName = column.ColumnName.Replace(" ", ""); // Remove spaces
+            //    }
+            //        dataTable.Columns.Add(columnName);
+            //    }
+               
+
+            //    // Add rows to DataTable (start from row 2 to skip headers)
+            //    for (int row = 2; row <= rowCount; row++)
+            //    {
+            //        DataRow dataRow = dataTable.Rows.Add();
+            //        for (int col = 1; col <= colCount; col++)
+            //        {
+            //            dataRow[col - 1] = worksheet.Cells[row, col].Value;
+            //        }
+            //    }
+            //}
 
 
-            using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
+
+            //DataTable rs = new DataTable("DataTable1");
+            DataSet1 dataSet = new DataSet1();
+
+            using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source="+filePath+";Extended Properties='Excel 12.0;HDR=YES;IMEX=1;';"))
             {
-                
-                DataSet1 dataSet = new DataSet1();
-                int sheetIndex = 0; // Index of the worksheet to read, 0 for the first sheet
-                ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[sheetIndex];
-                DataTable dataTable = new DataTable("DataTable1");
+                odConnection.Open();
 
-                // Load columns
-                foreach (var firstRowCell in worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column])
+                using (OleDbCommand cmd = new OleDbCommand())
                 {
-                    dataTable.Columns.Add(firstRowCell.Text);
-                }
-
-                // Load rows
-                for (int rowNum = 2; rowNum <= worksheet.Dimension.End.Row; rowNum++)
-                {
-                    ExcelRange row = worksheet.Cells[rowNum, 1, rowNum, worksheet.Dimension.End.Column];
-                    DataRow newRow = dataTable.Rows.Add();
-                    foreach (var cell in row)
-                    {
-
-                        newRow[cell.Start.Column - 1] = cell.Text;
+                    cmd.Connection = odConnection;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandText = "SELECT [Work Date],[PR Employee Number],[Employee],[Job],[Cost Code Description],[Pay Type],[Hours] [Work Performed Comments] FROM [Source Data$]";
+                    using (OleDbDataAdapter oleda = new OleDbDataAdapter(cmd))
+                    { 
+                        oleda.Fill(dataSet);
                     }
                 }
-                
-
-                dataSet.Tables.Add(dataTable);
-                if (dataSet.Tables.Count > 0)
-                {
-                    dataGridView1.DataSource = dataSet.Tables[1];
-                }
-
-                //string connectionString = string.Format("provider=Microsoft.Jet.OLEDB.4.0; data source={0};Extended Properties=Excel 8.0;", filePath);
-                //string query = string.Format("SELECT * FROM [{0}$]", worksheet.Name);
-
-                //DataSet data = new DataSet();
-                //using (OleDbConnection con = new OleDbConnection(connectionString))
-                //{
-                //    con.Open();
-                //    OleDbDataAdapter adapter = new OleDbDataAdapter(query, con);
-                //    adapter.Fill(data);
-                //}
-
-
-
-                //////////////////////////////////////////////
-                ///
-
-                 reportViewer2 = new ReportViewer();
-                reportViewer2.ProcessingMode = ProcessingMode.Local;
-                reportViewer2.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
-
-                // Add your DataSet to the report
-                reportViewer2.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", dataSet.Tables[1])); // 'DataSet1' is the name of the dataset in your report
-
-                // Display the report
-                reportViewer2.Dock = DockStyle.Fill;
-                this.Controls.Add(reportViewer2);
-                reportViewer2.RefreshReport();
-
-
-
-
-
-
-
-
+                odConnection.Close();
             }
 
+            foreach (DataTable dataTable in dataSet.Tables)
+            {
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    column.ColumnName = column.ColumnName.Replace(" ", ""); // Remove spaces
+                }
+               
+            }
+
+
+            //==============================================================
+            
+            if (dataSet.Tables.Count > 0)
+            {
+                dataGridView1.DataSource = dataSet.Tables[1];
+            }
+            reportViewer1 = new ReportViewer();
+            reportViewer1.ProcessingMode = ProcessingMode.Local;
+            reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
+
+            // Add your DataSet to the report
+            reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", dataSet.Tables[1])); // 'DataSet1' is the name of the dataset in your report
+
+            // Display the report
+            reportViewer1.Dock = DockStyle.Fill;
+            this.Controls.Add(reportViewer1);
+            reportViewer1.RefreshReport();
+
+
+        }
+        private void ExportReportToPdf(ReportViewer reportViewer, string outputPath)
+        {
+            try
+            {
+                // Set processing mode to Local
+                reportViewer.ProcessingMode = ProcessingMode.Local;
+
+                // Render the report to PDF format
+                Warning[] warnings;
+                string[] streamIds;
+                string mimeType;
+                string encoding;
+                string fileNameExtension;
+
+                byte[] pdfBytes = reportViewer.LocalReport.Render(
+                    "PDF", null, out mimeType, out encoding, out fileNameExtension,
+                    out streamIds, out warnings);
+
+                // Save the rendered PDF content to a file
+                File.WriteAllBytes(outputPath, pdfBytes);
+
+                MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while exporting the report to PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
-            
-        }
-
-        private void reportViewer2_Load(object sender, EventArgs e)
-        {
-           
         }
     }
 }

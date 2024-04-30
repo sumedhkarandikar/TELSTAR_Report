@@ -540,14 +540,14 @@
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="PREmployeeNumber">
+                        <Textbox Name="Employee">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!PREmployeeNumber.Value</Value>
+                                  <Value>=Fields!Employee.Value</Value>
                                   <Style>
                                     <FontWeight>Normal</FontWeight>
                                     <Color>#333333</Color>
@@ -557,7 +557,7 @@
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>PREmployeeNumber</rd:DefaultName>
+                          <rd:DefaultName>Employee</rd:DefaultName>
                           <Style>
                             <Border>
                               <Style>Solid</Style>
@@ -585,14 +585,14 @@
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Employee">
+                        <Textbox Name="PREmployeeNumber">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!Employee.Value</Value>
+                                  <Value>=Fields!PREmployeeNumber.Value</Value>
                                   <Style>
                                     <FontWeight>Normal</FontWeight>
                                     <Color>#333333</Color>
@@ -602,7 +602,7 @@
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Employee</rd:DefaultName>
+                          <rd:DefaultName>PREmployeeNumber</rd:DefaultName>
                           <Style>
                             <Border>
                               <Style>Solid</Style>
@@ -806,6 +806,7 @@
                             <PaddingBottom>2pt</PaddingBottom>
                           </Style>
                         </Textbox>
+                        <rd:Selected>true</rd:Selected>
                       </CellContents>
                     </TablixCell>
                   </TablixCells>
