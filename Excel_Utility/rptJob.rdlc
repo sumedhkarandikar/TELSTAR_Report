@@ -29,6 +29,10 @@
           <DataField>Employee</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
+        <Field Name="Job">
+          <DataField>Job</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
         <Field Name="CostCodeDescription">
           <DataField>CostCodeDescription</DataField>
           <rd:TypeName>System.String</rd:TypeName>
@@ -49,7 +53,7 @@
       <rd:DataSetInfo>
         <rd:DataSetName>DataSet1</rd:DataSetName>
         <rd:SchemaPath>C:\Users\prathamesh_bhuvad\Desktop\VASP SOLUTIONS\Excel_Utility\Excel_Utility\Excel_Utility\DataSet1.xsd</rd:SchemaPath>
-        <rd:TableName>DataTable1</rd:TableName>
+        <rd:TableName>DataTable2</rd:TableName>
         <rd:TableAdapterFillMethod />
         <rd:TableAdapterGetDataMethod />
         <rd:TableAdapterName />
@@ -806,7 +810,6 @@
                             <PaddingBottom>2pt</PaddingBottom>
                           </Style>
                         </Textbox>
-                        <rd:Selected>true</rd:Selected>
                       </CellContents>
                     </TablixCell>
                   </TablixCells>

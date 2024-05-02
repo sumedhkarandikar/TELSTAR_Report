@@ -1,5 +1,4 @@
-﻿using ExcelDataReader;
-using Microsoft.Reporting.WebForms;
+﻿using Microsoft.Reporting.WebForms;
 using Microsoft.Reporting.WinForms;
 using OfficeOpenXml;
 using System;
@@ -23,6 +22,7 @@ namespace Excel_Utility
     public partial class Form1 : Form
     {
         private string selectedFileName;
+        private string Job_value;
        
         public Form1()
         {
@@ -109,48 +109,11 @@ namespace Excel_Utility
         {
 
             string filePath = selectedFileName;
-            //DataSet1 dataSet = new DataSet1();
-            //DataTable dataTable = new DataTable("DataTable1");
 
-            //using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
-            //{
-            //    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            //    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming you want to read from the first worksheet
-
-            //    int rowCount = worksheet.Dimension.Rows;
-            //    int colCount = worksheet.Dimension.Columns;
-
-            //    // Add columns to DataTable
-            //    for (int col = 1; col <= colCount; col++)
-            //    {
-            //        // Set column names from Excel file headers
-            //        string columnName = worksheet.Cells[1, col].Value?.ToString() ?? "Column" + col;
-            //        //dataTable.Columns.Add(sheet.Cells[1, col].Value?.ToString() ?? $"Column{col}", typeof(string));
-            //         foreach (DataColumn column in dataTable.Columns)
-            //    {
-            //        column.ColumnName = column.ColumnName.Replace(" ", ""); // Remove spaces
-            //    }
-            //        dataTable.Columns.Add(columnName);
-            //    }
-               
-
-            //    // Add rows to DataTable (start from row 2 to skip headers)
-            //    for (int row = 2; row <= rowCount; row++)
-            //    {
-            //        DataRow dataRow = dataTable.Rows.Add();
-            //        for (int col = 1; col <= colCount; col++)
-            //        {
-            //            dataRow[col - 1] = worksheet.Cells[row, col].Value;
-            //        }
-            //    }
-            //}
-
-
-
-            //DataTable rs = new DataTable("DataTable1");
+            ////DataTable rs = new DataTable("DataTable1");
             DataSet1 dataSet = new DataSet1();
 
-            using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source="+filePath+";Extended Properties='Excel 12.0;HDR=YES;IMEX=1;';"))
+            using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + filePath + ";Extended Properties='Excel 12.0;HDR=NO;';"))
             {
                 odConnection.Open();
 
@@ -158,49 +121,99 @@ namespace Excel_Utility
                 {
                     cmd.Connection = odConnection;
                     cmd.CommandType = CommandType.Text;
-                    cmd.CommandText = "SELECT [Work Date],[PR Employee Number],[Employee],[Job],[Cost Code Description],[Pay Type],[Hours] [Work Performed Comments] FROM [Source Data$]";
+                    cmd.CommandText = "SELECT [F1],[F2],[F3],[F4],[F6],[F7],[F8],[F9],[F11] FROM [Source Data$A2:Z]";
                     using (OleDbDataAdapter oleda = new OleDbDataAdapter(cmd))
-                    { 
+                    {
                         oleda.Fill(dataSet);
                     }
                 }
                 odConnection.Close();
             }
 
-            foreach (DataTable dataTable in dataSet.Tables)
-            {
-                foreach (DataColumn column in dataTable.Columns)
-                {
-                    column.ColumnName = column.ColumnName.Replace(" ", ""); // Remove spaces
-                }
-               
-            }
-
+            MapHeaders(dataSet);
 
             //==============================================================
-            
-            if (dataSet.Tables.Count > 0)
+
+
+
+
+            string columnName = "Job";
+
+            // Create a HashSet to store unique string values
+            HashSet<string> uniqueValues = new HashSet<string>();
+
+            // Iterate over each DataTable in the DataSet
+            foreach (DataTable dataTable in dataSet.Tables)
             {
-                dataGridView1.DataSource = dataSet.Tables[1];
+                // Get the index of the specified column
+                int columnIndex = dataTable.Columns.IndexOf(columnName);
+
+                // Check if the column exists in the DataTable
+                if (columnIndex != -1)
+                {
+                    // Iterate over each row in the DataTable
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        // Get the value of the specified column for the current row
+                        string value = row[columnIndex].ToString();
+
+                        // Add the value to the HashSet if it's not already present
+                        if (!uniqueValues.Contains(value))
+                        {
+                            uniqueValues.Add(value);
+
+                            if (value != "")
+                            {
+                                // Use LINQ to DataSet to filter rows based on a string condition
+                                var query = from DataRow ro in dataTable.Rows
+                                            where ro.Field<string>("Job") == value
+                                            select ro;
+
+                                // Create a new DataTable to store filtered data
+                                DataTable filteredDataTable = query.Any() ? query.CopyToDataTable() : dataTable.Clone();
+
+                                dataGridView1.DataSource = filteredDataTable;
+
+                                DataTable Newtable = new DataTable("DataTable2");
+                                Newtable = filteredDataTable.Copy();
+                               // ReportParameter Jobno = new ReportParameter("strJobNo",value.Trim());
+                                //this.reportViewer1.LocalReport.SetParameters(Jobno);
+
+
+                                reportViewer1 = new ReportViewer();
+                                reportViewer1.ProcessingMode = ProcessingMode.Local;
+                                reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
+
+                                // Add your DataSet to the report
+                                reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); // 'DataSet1' is the name of the dataset in your report
+
+                                // Display the report
+                                reportViewer1.Dock = DockStyle.Fill;
+                                this.Controls.Add(reportViewer1);
+                                reportViewer1.RefreshReport();
+
+                                ExportReportToPdf(reportViewer1, @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility");
+
+
+
+                            }
+                        }
+                    }
+                }
+
             }
-            reportViewer1 = new ReportViewer();
-            reportViewer1.ProcessingMode = ProcessingMode.Local;
-            reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
 
-            // Add your DataSet to the report
-            reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", dataSet.Tables[1])); // 'DataSet1' is the name of the dataset in your report
-
-            // Display the report
-            reportViewer1.Dock = DockStyle.Fill;
-            this.Controls.Add(reportViewer1);
-            reportViewer1.RefreshReport();
+            //==============================================================
 
 
-        }
+            }
+
+
         private void ExportReportToPdf(ReportViewer reportViewer, string outputPath)
-        {
-            try
+       
             {
+             try
+             {
                 // Set processing mode to Local
                 reportViewer.ProcessingMode = ProcessingMode.Local;
 
@@ -215,9 +228,17 @@ namespace Excel_Utility
                     "PDF", null, out mimeType, out encoding, out fileNameExtension,
                     out streamIds, out warnings);
 
-                // Save the rendered PDF content to a file
-                File.WriteAllBytes(outputPath, pdfBytes);
+                string outputFileName = $"report_{DateTime.Now:yyyyMMddHHmmssfff}.pdf";
 
+                // Combine the output directory and file name
+                string outputFilePath = Path.Combine(outputPath, outputFileName);
+
+                // Save the PDF to the specified output file path
+                File.WriteAllBytes(outputFilePath, pdfBytes);
+
+                //// Save the rendered PDF content to a file
+                //File.WriteAllBytes(outputPath, pdfBytes);
+                
                 MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -228,6 +249,36 @@ namespace Excel_Utility
 
         private void Form1_Load(object sender, EventArgs e)
         {
+        }
+        private void MapHeaders(DataSet dataSet)
+        {
+            // Define mapping from old column names to new column names
+            Dictionary<string, string> headerMapping = new Dictionary<string, string>
+        {
+            {"F1", "WorkDate"},
+            {"F2", "PREmployeeNumber"},
+            {"F3", "Employee"}, 
+            { "F4", "Job" },
+            { "F6", "CostCode"},
+            { "F7", "CostCodeDescription"},
+            { "F8", "PayType"},
+            { "F9", "Hours"},
+            { "F11", "WorkPerformedComments"},
+            
+        };
+
+            // Iterate through the tables and columns and map headers
+            foreach (DataTable table in dataSet.Tables)
+            {
+                foreach (DataColumn column in table.Columns)
+                {
+                    if (headerMapping.ContainsKey(column.ColumnName))
+                    {
+                        column.ColumnName = headerMapping[column.ColumnName];
+                    }
+                    // You can add an else clause here if you want to handle columns without a mapping
+                }
+            }
         }
     }
 }
