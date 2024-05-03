@@ -107,106 +107,127 @@ namespace Excel_Utility
        
         private void Process_Click(object sender, EventArgs e)
         {
-
-            string filePath = selectedFileName;
-
-            ////DataTable rs = new DataTable("DataTable1");
-            DataSet1 dataSet = new DataSet1();
-
-            using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + filePath + ";Extended Properties='Excel 12.0;HDR=NO;';"))
+            if (File_Name.Text == "" && Folder_Name.Text == "" && textBox1.Text == "")
             {
-                odConnection.Open();
-
-                using (OleDbCommand cmd = new OleDbCommand())
-                {
-                    cmd.Connection = odConnection;
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandText = "SELECT [F1],[F2],[F3],[F4],[F6],[F7],[F8],[F9],[F11] FROM [Source Data$A2:Z]";
-                    using (OleDbDataAdapter oleda = new OleDbDataAdapter(cmd))
-                    {
-                        oleda.Fill(dataSet);
-                    }
-                }
-                odConnection.Close();
+                MessageBox.Show("Please select the 'Input File','Output Folder' and 'Week Ending Date' for processing the data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            MapHeaders(dataSet);
-
-            //==============================================================
-
-
-
-
-            string columnName = "Job";
-
-            // Create a HashSet to store unique string values
-            HashSet<string> uniqueValues = new HashSet<string>();
-
-            // Iterate over each DataTable in the DataSet
-            foreach (DataTable dataTable in dataSet.Tables)
+            else if (Folder_Name.Text == "" && textBox1.Text == "")
             {
-                // Get the index of the specified column
-                int columnIndex = dataTable.Columns.IndexOf(columnName);
+                MessageBox.Show("Please select the 'Output Folder' and 'Week Ending Date' for processing the data", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                // Check if the column exists in the DataTable
-                if (columnIndex != -1)
+            }
+            else if (textBox1.Text == "")
+            {
+                MessageBox.Show("Please select the 'Week Ending Date'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            }
+            else
+            {
+
+                string filePath = selectedFileName;
+
+                ////DataTable rs = new DataTable("DataTable1");
+                DataSet1 dataSet = new DataSet1();
+
+                using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + filePath + ";Extended Properties='Excel 12.0;HDR=NO;';"))
                 {
-                    // Iterate over each row in the DataTable
-                    foreach (DataRow row in dataTable.Rows)
+                    odConnection.Open();
+
+                    using (OleDbCommand cmd = new OleDbCommand())
                     {
-                        // Get the value of the specified column for the current row
-                        string value = row[columnIndex].ToString();
-
-                        // Add the value to the HashSet if it's not already present
-                        if (!uniqueValues.Contains(value))
+                        cmd.Connection = odConnection;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.CommandText = "SELECT [F1],[F2],[F3],[F4],[F6],[F7],[F8],[F9],[F11] FROM [Source Data$A2:Z]";
+                        using (OleDbDataAdapter oleda = new OleDbDataAdapter(cmd))
                         {
-                            uniqueValues.Add(value);
+                            oleda.Fill(dataSet);
+                        }
+                    }
+                    odConnection.Close();
+                }
 
-                            if (value != "")
+                MapHeaders(dataSet);
+
+                //==============================================================
+
+
+
+
+                string columnName = "Job";
+
+                // Create a HashSet to store unique string values
+                HashSet<string> uniqueValues = new HashSet<string>();
+
+                // Iterate over each DataTable in the DataSet
+                foreach (DataTable dataTable in dataSet.Tables)
+                {
+                    // Get the index of the specified column
+                    int columnIndex = dataTable.Columns.IndexOf(columnName);
+
+                    // Check if the column exists in the DataTable
+                    if (columnIndex != -1)
+                    {
+                        // Iterate over each row in the DataTable
+                        foreach (DataRow row in dataTable.Rows)
+                        {
+                            // Get the value of the specified column for the current row
+                            string value = row[columnIndex].ToString();
+
+                            // Add the value to the HashSet if it's not already present
+                            if (!uniqueValues.Contains(value))
                             {
-                                // Use LINQ to DataSet to filter rows based on a string condition
-                                var query = from DataRow ro in dataTable.Rows
-                                            where ro.Field<string>("Job") == value
-                                            select ro;
+                                uniqueValues.Add(value);
 
-                                // Create a new DataTable to store filtered data
-                                DataTable filteredDataTable = query.Any() ? query.CopyToDataTable() : dataTable.Clone();
+                                if (value != "")
+                                {
+                                    // Use LINQ to DataSet to filter rows based on a string condition
+                                    var query = from DataRow ro in dataTable.Rows
+                                                where ro.Field<string>("Job") == value
+                                                select ro;
 
-                                dataGridView1.DataSource = filteredDataTable;
+                                    // Create a new DataTable to store filtered data
+                                    DataTable filteredDataTable = query.Any() ? query.CopyToDataTable() : dataTable.Clone();
 
-                                DataTable Newtable = new DataTable("DataTable2");
-                                Newtable = filteredDataTable.Copy();
-                               // ReportParameter Jobno = new ReportParameter("strJobNo",value.Trim());
-                                //this.reportViewer1.LocalReport.SetParameters(Jobno);
+                                   // dataGridView1.DataSource = filteredDataTable;
+
+                                    DataTable Newtable = new DataTable("DataTable2");
+                                    Newtable = filteredDataTable.Copy();
+                                    ReportParameter Jobno = new ReportParameter("strJobNo", value);
+                                    Job_value = value;
+
+                                    Success_txt.AppendText("Job no " + Job_value + " processed successfully." + Environment.NewLine);
+
+                                    reportViewer1 = new ReportViewer();
+                                    reportViewer1.ProcessingMode = ProcessingMode.Local;
+                                    reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
+                                    this.reportViewer1.LocalReport.SetParameters(Jobno);
+                                    // Add your DataSet to the report
+                                    reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); // 'DataSet1' is the name of the dataset in your report
+
+                                    // Display the report
+                                   // reportViewer1.Dock = DockStyle.Fill;
+                                    //this.Controls.Add(reportViewer1);
+                                    //reportViewer1.RefreshReport();
+
+                                    ExportReportToPdf(reportViewer1, @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility");
 
 
-                                reportViewer1 = new ReportViewer();
-                                reportViewer1.ProcessingMode = ProcessingMode.Local;
-                                reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
 
-                                // Add your DataSet to the report
-                                reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); // 'DataSet1' is the name of the dataset in your report
-
-                                // Display the report
-                                reportViewer1.Dock = DockStyle.Fill;
-                                this.Controls.Add(reportViewer1);
-                                reportViewer1.RefreshReport();
-
-                                ExportReportToPdf(reportViewer1, @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility");
-
-
-
+                                }
+                                
                             }
                         }
                     }
+
                 }
 
+                MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
+                //==============================================================
             }
 
-            //==============================================================
-
-
-            }
+        }
 
 
         private void ExportReportToPdf(ReportViewer reportViewer, string outputPath)
@@ -228,7 +249,7 @@ namespace Excel_Utility
                     "PDF", null, out mimeType, out encoding, out fileNameExtension,
                     out streamIds, out warnings);
 
-                string outputFileName = $"report_{DateTime.Now:yyyyMMddHHmmssfff}.pdf";
+                string outputFileName = $"{Job_value+"_"+textBox1.Text}.pdf";
 
                 // Combine the output directory and file name
                 string outputFilePath = Path.Combine(outputPath, outputFileName);
@@ -239,7 +260,7 @@ namespace Excel_Utility
                 //// Save the rendered PDF content to a file
                 //File.WriteAllBytes(outputPath, pdfBytes);
                 
-                MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               // MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -249,6 +270,7 @@ namespace Excel_Utility
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.reportViewer1.RefreshReport();
         }
         private void MapHeaders(DataSet dataSet)
         {
@@ -280,5 +302,7 @@ namespace Excel_Utility
                 }
             }
         }
+
+       
     }
 }
