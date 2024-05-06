@@ -24,7 +24,8 @@ namespace Excel_Utility
     {
         private string selectedFileName;
         private string Job_value;
-       
+        private string selectedFolderPath;
+
         public Form1()
         {
             InitializeComponent();
@@ -57,7 +58,7 @@ namespace Excel_Utility
             
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                string selectedFolderPath = folderBrowserDialog.SelectedPath;
+                selectedFolderPath = folderBrowserDialog.SelectedPath;
                 Folder_Name.Text = selectedFolderPath;
                 Folder_Name.Visible = true;
 
@@ -210,7 +211,7 @@ namespace Excel_Utility
                                     //this.Controls.Add(reportViewer1);
                                     //reportViewer1.RefreshReport();
 
-                                    ExportReportToPdf(reportViewer1, @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility");
+                                    ExportReportToPdf(reportViewer1, selectedFolderPath);
 
 
 
