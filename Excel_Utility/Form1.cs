@@ -11,6 +11,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -177,8 +178,8 @@ namespace Excel_Utility
                             if (!uniqueValues.Contains(value))
                             {
                                 uniqueValues.Add(value);
-
-                                if (value != "")
+                                string pattern = @"^\d{2}-\d{5}$";
+                                if (Regex.IsMatch(value, pattern))
                                 {
                                     // Use LINQ to DataSet to filter rows based on a string condition
                                     var query = from DataRow ro in dataTable.Rows
@@ -195,7 +196,7 @@ namespace Excel_Utility
                                     ReportParameter Jobno = new ReportParameter("strJobNo", value);
                                     Job_value = value;
 
-                                    Success_txt.AppendText("Job no " + Job_value + " processed successfully." + Environment.NewLine);
+                                    Success_txt.AppendText("Job no " + value + " processed successfully." + Environment.NewLine);
 
                                     reportViewer1 = new ReportViewer();
                                     reportViewer1.ProcessingMode = ProcessingMode.Local;
@@ -214,7 +215,17 @@ namespace Excel_Utility
 
 
                                 }
-                                
+                                else if (value == "")
+                                {
+                                    Error_txt.AppendText("Empty Job no detected." + Environment.NewLine);
+
+                                }
+                                else if(!Regex.IsMatch(value, pattern))
+                                {
+                                    Error_txt.AppendText("Job no: " + value + " is not in specified format." + Environment.NewLine);
+
+                                }
+
                             }
                         }
                     }
