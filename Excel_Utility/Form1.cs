@@ -25,6 +25,7 @@ namespace Excel_Utility
         private string selectedFileName;
         private string Job_value;
         private string selectedFolderPath;
+        private string[] ColumnHead;
 
         public Form1()
         {
@@ -128,69 +129,132 @@ namespace Excel_Utility
 
                 string filePath = selectedFileName;
 
-                ////DataTable rs = new DataTable("DataTable1");
                 DataSet1 dataSet = new DataSet1();
+                DataTable dt = new DataTable("DataTable2");
 
-                using (var odConnection = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + filePath + ";Extended Properties='Excel 12.0;HDR=NO;';"))
+                string[] rowData;
+
+                // Load Excel file
+                using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
                 {
-                    odConnection.Open();
+                    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
 
-                    using (OleDbCommand cmd = new OleDbCommand())
+                    int[] rowNumber = { 15, 4 };
+                    int columnCount = worksheet.Dimension.End.Column;
+                    rowData = new string[columnCount * 2];
+
+                    // Read data from the row into the array
+                    for (int col = 1; col <= columnCount; col++)
                     {
-                        cmd.Connection = odConnection;
-                        cmd.CommandType = CommandType.Text;
-                        cmd.CommandText = "SELECT [F1],[F2],[F3],[F4],[F6],[F7],[F8],[F9],[F11] FROM [Source Data$A2:Z]";
-                        using (OleDbDataAdapter oleda = new OleDbDataAdapter(cmd))
+                        rowData[col - 1] = worksheet.Cells[rowNumber[0], col].Value?.ToString();
+                        rowData[col + worksheet.Dimension.End.Column - 1] = worksheet.Cells[rowNumber[1], col].Value?.ToString();
+
+                    }
+
+                    string[] modifiedArray = new string[rowData.Length];
+                    for (int i = 0; i < rowData.Length; i++)
+                    {
+                        if (rowData[i] != null)
                         {
-                            oleda.Fill(dataSet);
+                            // Remove square brackets from the string
+                            modifiedArray[i] = rowData[i].Replace("[", "").Replace("]", "");
+                        }
+
+                    }
+
+                    string[] lastWordsArray = new string[modifiedArray.Length];
+
+                    for (int i = 0; i < modifiedArray.Length; i++)
+                    {
+                        if (modifiedArray[i] != null)
+                        {
+                            string[] words = modifiedArray[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (words.Length > 0)
+                            {
+                                // Get the last word
+                                lastWordsArray[i] = words[words.Length - 1];
+                            }
+                            else
+                            {
+                                // If the string is empty or contains only spaces, assign an empty string
+                                lastWordsArray[i] = string.Empty;
+                            }
+                        }
+                        else
+                        {
+                            // If the current string is null, assign an empty string
+                            lastWordsArray[i] = string.Empty;
                         }
                     }
-                    odConnection.Close();
+                    ColumnHead = lastWordsArray.Where(item => !string.IsNullOrEmpty(item)).ToArray();
+
+
+
+                    DataTable dataTable = new DataTable();
+                    string[] columnNames = ColumnHead;
+                    foreach (string colu in columnNames)
+                    {
+                        dataTable.Columns.Add(colu);
+                    }
+
+                    ExcelWorksheet worksheet2 = package.Workbook.Worksheets[0];
+                    var startCell = worksheet2.Cells["A1"];
+                    var endCell = worksheet2.Dimension.End;
+
+                    for (int row = startCell.Start.Row; row <= endCell.Row; row++)
+                    {
+                        DataRow dataRow = dataTable.NewRow();
+                        for (int col = startCell.Start.Column; col <= endCell.Column; col++)
+                        {
+                            string colu = ExcelColumnToName(col);
+                            if (columnNames.Contains(colu))
+                            {
+                                dataRow[colu] = worksheet2.Cells[row, col].Value?.ToString();
+                            }
+                        }
+
+                        dataTable.Rows.Add(dataRow);
+                    }
+                    dataSet.Tables.Add(dataTable);
+
+                    dt.Merge(dataTable);
+                    ChangeColumnHeaders(dt, dt.Columns[0].ColumnName, "WorkDate");
+                    ChangeColumnHeaders(dt, dt.Columns[1].ColumnName, "PREmployeeNumber");
+                    ChangeColumnHeaders(dt, dt.Columns[2].ColumnName, "Employee");
+                    ChangeColumnHeaders(dt, dt.Columns[3].ColumnName, "CostCodeDescription");
+                    ChangeColumnHeaders(dt, dt.Columns[4].ColumnName, "PayType");
+                    ChangeColumnHeaders(dt, dt.Columns[5].ColumnName, "Hours");
+                    ChangeColumnHeaders(dt, dt.Columns[6].ColumnName, "WorkPerformedComments");
+                    ChangeColumnHeaders(dt, dt.Columns[7].ColumnName, "Job");
+                    ChangeColumnHeaders(dt, dt.Columns[8].ColumnName, "WO");
+                    
                 }
 
-                MapHeaders(dataSet);
-
-                //==============================================================
-
-
-
-
-                string columnName = "Job";
-
-                // Create a HashSet to store unique string values
+                string columnName = dt.Columns[7].ColumnName;
                 HashSet<string> uniqueValues = new HashSet<string>();
-
-                // Iterate over each DataTable in the DataSet
-                foreach (DataTable dataTable in dataSet.Tables)
-                {
+                    
                     // Get the index of the specified column
-                    int columnIndex = dataTable.Columns.IndexOf(columnName);
+                    int columnIndex = dt.Columns.IndexOf(columnName);
+                     
 
-                    // Check if the column exists in the DataTable
                     if (columnIndex != -1)
                     {
-                        // Iterate over each row in the DataTable
-                        foreach (DataRow row in dataTable.Rows)
+                        foreach (DataRow row in dt.Rows)
                         {
-                            // Get the value of the specified column for the current row
                             string value = row[columnIndex].ToString();
-
-                            // Add the value to the HashSet if it's not already present
                             if (!uniqueValues.Contains(value))
                             {
                                 uniqueValues.Add(value);
                                 string pattern = @"^\d{2}-\d{5}$";
                                 if (Regex.IsMatch(value, pattern))
                                 {
-                                    // Use LINQ to DataSet to filter rows based on a string condition
-                                    var query = from DataRow ro in dataTable.Rows
-                                                where ro.Field<string>("Job") == value
+                                    var query = from DataRow ro in dt.Rows
+                                                where ro.Field<string>(columnName) == value
                                                 select ro;
 
-                                    // Create a new DataTable to store filtered data
-                                    DataTable filteredDataTable = query.Any() ? query.CopyToDataTable() : dataTable.Clone();
-
-                                   // dataGridView1.DataSource = filteredDataTable;
+                                    DataTable filteredDataTable = query.Any() ? query.CopyToDataTable() : dt.Clone();
 
                                     DataTable Newtable = new DataTable("DataTable2");
                                     Newtable = filteredDataTable.Copy();
@@ -206,11 +270,6 @@ namespace Excel_Utility
                                     // Add your DataSet to the report
                                     reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); // 'DataSet1' is the name of the dataset in your report
 
-                                    // Display the report
-                                   // reportViewer1.Dock = DockStyle.Fill;
-                                    //this.Controls.Add(reportViewer1);
-                                    //reportViewer1.RefreshReport();
-
                                     ExportReportToPdf(reportViewer1, selectedFolderPath);
 
 
@@ -223,15 +282,17 @@ namespace Excel_Utility
                                 }
                                 else if(!Regex.IsMatch(value, pattern))
                                 {
-                                    Error_txt.AppendText("Job no: " + value + " is not in specified format." + Environment.NewLine);
-
+                                    if (value != "Job")
+                                    {
+                                        Error_txt.AppendText("Job no: " + value + " is not in specified format." + Environment.NewLine);
+                                    }
                                 }
 
                             }
                         }
                     }
 
-                }
+                
 
                 MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -268,12 +329,8 @@ namespace Excel_Utility
 
                 // Save the PDF to the specified output file path
                 File.WriteAllBytes(outputFilePath, pdfBytes);
-
-                //// Save the rendered PDF content to a file
-                //File.WriteAllBytes(outputPath, pdfBytes);
                 
-               // MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+             }
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred while exporting the report to PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -284,37 +341,28 @@ namespace Excel_Utility
         {
             this.reportViewer1.RefreshReport();
         }
-        private void MapHeaders(DataSet dataSet)
+       private string ExcelColumnToName(int column)
         {
-            // Define mapping from old column names to new column names
-            Dictionary<string, string> headerMapping = new Dictionary<string, string>
-        {
-            {"F1", "WorkDate"},
-            {"F2", "PREmployeeNumber"},
-            {"F3", "Employee"}, 
-            { "F4", "Job" },
-            { "F6", "CostCode"},
-            { "F7", "CostCodeDescription"},
-            { "F8", "PayType"},
-            { "F9", "Hours"},
-            { "F11", "WorkPerformedComments"},
-            
-        };
+            int dividend = column;
+            string columnName = String.Empty;
 
-            // Iterate through the tables and columns and map headers
-            foreach (DataTable table in dataSet.Tables)
+            while (dividend > 0)
             {
-                foreach (DataColumn column in table.Columns)
-                {
-                    if (headerMapping.ContainsKey(column.ColumnName))
-                    {
-                        column.ColumnName = headerMapping[column.ColumnName];
-                    }
-                    // You can add an else clause here if you want to handle columns without a mapping
-                }
+                int modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo) + columnName;
+                dividend = (dividend - modulo) / 26;
+            }
+
+            return columnName;
+        }
+
+        static void ChangeColumnHeaders(DataTable dataTable, string oldHeader, string newHeader)
+        {
+            if (dataTable.Columns.Contains(oldHeader))
+            {
+                dataTable.Columns[oldHeader].ColumnName = newHeader;
             }
         }
 
-       
     }
 }

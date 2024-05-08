@@ -29,10 +29,6 @@
           <DataField>Employee</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="Job">
-          <DataField>Job</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
         <Field Name="CostCodeDescription">
           <DataField>CostCodeDescription</DataField>
           <rd:TypeName>System.String</rd:TypeName>
@@ -47,6 +43,14 @@
         </Field>
         <Field Name="WorkPerformedComments">
           <DataField>WorkPerformedComments</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Job">
+          <DataField>Job</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="WO">
+          <DataField>WO</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
       </Fields>
