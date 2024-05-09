@@ -136,6 +136,7 @@
             // 
             this.File_Name.AutoSize = true;
             this.File_Name.Location = new System.Drawing.Point(249, 34);
+            this.File_Name.MaximumSize = new System.Drawing.Size(345, 0);
             this.File_Name.Name = "File_Name";
             this.File_Name.Size = new System.Drawing.Size(0, 13);
             this.File_Name.TabIndex = 9;
@@ -144,6 +145,7 @@
             // 
             this.Folder_Name.AutoSize = true;
             this.Folder_Name.Location = new System.Drawing.Point(252, 85);
+            this.Folder_Name.MaximumSize = new System.Drawing.Size(345, 0);
             this.Folder_Name.Name = "Folder_Name";
             this.Folder_Name.Size = new System.Drawing.Size(0, 13);
             this.Folder_Name.TabIndex = 10;

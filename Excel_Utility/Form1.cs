@@ -10,10 +10,12 @@ using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static OfficeOpenXml.ExcelErrorValue;
 
 
 
@@ -110,134 +112,135 @@ namespace Excel_Utility
        
         private void Process_Click(object sender, EventArgs e)
         {
-            if (File_Name.Text == "" && Folder_Name.Text == "" && textBox1.Text == "")
+            try
             {
-                MessageBox.Show("Please select the 'Input File','Output Folder' and 'Week Ending Date' for processing the data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (Folder_Name.Text == "" && textBox1.Text == "")
-            {
-                MessageBox.Show("Please select the 'Output Folder' and 'Week Ending Date' for processing the data", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-            }
-            else if (textBox1.Text == "")
-            {
-                MessageBox.Show("Please select the 'Week Ending Date'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-            }
-            else
-            {
-
-                string filePath = selectedFileName;
-
-                DataSet1 dataSet = new DataSet1();
-                DataTable dt = new DataTable("DataTable2");
-
-                string[] rowData;
-
-                // Load Excel file
-                using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
+                Process.Enabled = false;
+                if (File_Name.Text == "" && Folder_Name.Text == "" && textBox1.Text == "")
                 {
-                    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
+                    MessageBox.Show("Please select the 'Input File','Output Folder' and 'Week Ending Date' for processing the data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else if (Folder_Name.Text == "" && textBox1.Text == "")
+                {
+                    MessageBox.Show("Please select the 'Output Folder' and 'Week Ending Date' for processing the data", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                    int[] rowNumber = { 15, 4 };
-                    int columnCount = worksheet.Dimension.End.Column;
-                    rowData = new string[columnCount * 2];
+                }
+                else if (textBox1.Text == "")
+                {
+                    MessageBox.Show("Please select the 'Week Ending Date'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                    // Read data from the row into the array
-                    for (int col = 1; col <= columnCount; col++)
+                }
+                else
+                {
+
+                    string filePath = selectedFileName;
+
+                    DataSet1 dataSet = new DataSet1();
+                    DataTable dt = new DataTable("DataTable2");
+
+                    string[] rowData;
+
+                    // Load Excel file
+                    using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
                     {
-                        rowData[col - 1] = worksheet.Cells[rowNumber[0], col].Value?.ToString();
-                        rowData[col + worksheet.Dimension.End.Column - 1] = worksheet.Cells[rowNumber[1], col].Value?.ToString();
+                        ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
 
-                    }
+                        int[] rowNumber = { 15, 4 };
+                        int columnCount = worksheet.Dimension.End.Column;
+                        rowData = new string[columnCount * 2];
 
-                    string[] modifiedArray = new string[rowData.Length];
-                    for (int i = 0; i < rowData.Length; i++)
-                    {
-                        if (rowData[i] != null)
+                        // Read data from the row into the array
+                        for (int col = 1; col <= columnCount; col++)
                         {
-                            // Remove square brackets from the string
-                            modifiedArray[i] = rowData[i].Replace("[", "").Replace("]", "");
+                            rowData[col - 1] = worksheet.Cells[rowNumber[0], col].Value?.ToString();
+                            rowData[col + worksheet.Dimension.End.Column - 1] = worksheet.Cells[rowNumber[1], col].Value?.ToString();
+
                         }
 
-                    }
-
-                    string[] lastWordsArray = new string[modifiedArray.Length];
-
-                    for (int i = 0; i < modifiedArray.Length; i++)
-                    {
-                        if (modifiedArray[i] != null)
+                        string[] modifiedArray = new string[rowData.Length];
+                        for (int i = 0; i < rowData.Length; i++)
                         {
-                            string[] words = modifiedArray[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                            if (words.Length > 0)
+                            if (rowData[i] != null)
                             {
-                                // Get the last word
-                                lastWordsArray[i] = words[words.Length - 1];
+                                // Remove square brackets from the string
+                                modifiedArray[i] = rowData[i].Replace("[", "").Replace("]", "");
+                            }
+
+                        }
+
+                        string[] lastWordsArray = new string[modifiedArray.Length];
+
+                        for (int i = 0; i < modifiedArray.Length; i++)
+                        {
+                            if (modifiedArray[i] != null)
+                            {
+                                string[] words = modifiedArray[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                if (words.Length > 0)
+                                {
+                                    // Get the last word
+                                    lastWordsArray[i] = words[words.Length - 1];
+                                }
+                                else
+                                {
+                                    lastWordsArray[i] = string.Empty;
+                                }
                             }
                             else
                             {
-                                // If the string is empty or contains only spaces, assign an empty string
                                 lastWordsArray[i] = string.Empty;
                             }
                         }
-                        else
+                        ColumnHead = lastWordsArray.Where(item => !string.IsNullOrEmpty(item)).ToArray();
+
+
+
+                        DataTable dataTable = new DataTable();
+                        string[] columnNames = ColumnHead;
+                        foreach (string colu in columnNames)
                         {
-                            // If the current string is null, assign an empty string
-                            lastWordsArray[i] = string.Empty;
+                            dataTable.Columns.Add(colu);
                         }
-                    }
-                    ColumnHead = lastWordsArray.Where(item => !string.IsNullOrEmpty(item)).ToArray();
 
+                        ExcelWorksheet worksheet2 = package.Workbook.Worksheets[0];
+                        var startCell = worksheet2.Cells["A1"];
+                        var endCell = worksheet2.Dimension.End;
 
-
-                    DataTable dataTable = new DataTable();
-                    string[] columnNames = ColumnHead;
-                    foreach (string colu in columnNames)
-                    {
-                        dataTable.Columns.Add(colu);
-                    }
-
-                    ExcelWorksheet worksheet2 = package.Workbook.Worksheets[0];
-                    var startCell = worksheet2.Cells["A1"];
-                    var endCell = worksheet2.Dimension.End;
-
-                    for (int row = startCell.Start.Row; row <= endCell.Row; row++)
-                    {
-                        DataRow dataRow = dataTable.NewRow();
-                        for (int col = startCell.Start.Column; col <= endCell.Column; col++)
+                        for (int row = startCell.Start.Row; row <= endCell.Row; row++)
                         {
-                            string colu = ExcelColumnToName(col);
-                            if (columnNames.Contains(colu))
+                            DataRow dataRow = dataTable.NewRow();
+                            for (int col = startCell.Start.Column; col <= endCell.Column; col++)
                             {
-                                dataRow[colu] = worksheet2.Cells[row, col].Value?.ToString();
+                                string colu = ExcelColumnToName(col);
+                                if (columnNames.Contains(colu))
+                                {
+                                    dataRow[colu] = worksheet2.Cells[row, col].Value?.ToString();
+                                }
                             }
+
+                            dataTable.Rows.Add(dataRow);
                         }
+                        dataSet.Tables.Add(dataTable);
 
-                        dataTable.Rows.Add(dataRow);
+                        dt.Merge(dataTable);
+                        ChangeColumnHeaders(dt, dt.Columns[0].ColumnName, "WorkDate");
+                        ChangeColumnHeaders(dt, dt.Columns[1].ColumnName, "PREmployeeNumber");
+                        ChangeColumnHeaders(dt, dt.Columns[2].ColumnName, "Employee");
+                        ChangeColumnHeaders(dt, dt.Columns[3].ColumnName, "CostCodeDescription");
+                        ChangeColumnHeaders(dt, dt.Columns[4].ColumnName, "PayType");
+                        ChangeColumnHeaders(dt, dt.Columns[5].ColumnName, "Hours");
+                        ChangeColumnHeaders(dt, dt.Columns[6].ColumnName, "WorkPerformedComments");
+                        ChangeColumnHeaders(dt, dt.Columns[7].ColumnName, "Job");
+                        ChangeColumnHeaders(dt, dt.Columns[8].ColumnName, "WO");
+
                     }
-                    dataSet.Tables.Add(dataTable);
 
-                    dt.Merge(dataTable);
-                    ChangeColumnHeaders(dt, dt.Columns[0].ColumnName, "WorkDate");
-                    ChangeColumnHeaders(dt, dt.Columns[1].ColumnName, "PREmployeeNumber");
-                    ChangeColumnHeaders(dt, dt.Columns[2].ColumnName, "Employee");
-                    ChangeColumnHeaders(dt, dt.Columns[3].ColumnName, "CostCodeDescription");
-                    ChangeColumnHeaders(dt, dt.Columns[4].ColumnName, "PayType");
-                    ChangeColumnHeaders(dt, dt.Columns[5].ColumnName, "Hours");
-                    ChangeColumnHeaders(dt, dt.Columns[6].ColumnName, "WorkPerformedComments");
-                    ChangeColumnHeaders(dt, dt.Columns[7].ColumnName, "Job");
-                    ChangeColumnHeaders(dt, dt.Columns[8].ColumnName, "WO");
-                    
-                }
+                    string columnName = dt.Columns[7].ColumnName;
+                    HashSet<string> uniqueValues = new HashSet<string>();
 
-                string columnName = dt.Columns[7].ColumnName;
-                HashSet<string> uniqueValues = new HashSet<string>();
-                    
                     // Get the index of the specified column
                     int columnIndex = dt.Columns.IndexOf(columnName);
-                     
+
 
                     if (columnIndex != -1)
                     {
@@ -261,18 +264,34 @@ namespace Excel_Utility
                                     ReportParameter Jobno = new ReportParameter("strJobNo", value);
                                     Job_value = value;
 
-                                    Success_txt.AppendText("Job no " + value + " processed successfully." + Environment.NewLine);
+                                    string targetColumnName = dt.Columns[8].ColumnName;
+                                    string result=null;
+                                    foreach (DataRow Wrow in dt.Rows)
+                                    {
+                                        if (Convert.ToString(Wrow[columnName]) == value)
+                                        {
+                                         result = Convert.ToString(row[targetColumnName]);
+                                         break;
+                                        }
+
+                                    }
+                                    ReportParameter WOname = new ReportParameter("strWONo", result);
 
                                     reportViewer1 = new ReportViewer();
                                     reportViewer1.ProcessingMode = ProcessingMode.Local;
-                                    reportViewer1.LocalReport.ReportPath = @"C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\Excel_Utility\\Excel_Utility\\Excel_Utility\\rptJob.rdlc"; // Path to your RDLC report file
+                                    string executableDirectory = Application.StartupPath;
+                                    string projectDirectory = Directory.GetParent(Directory.GetParent(executableDirectory).FullName).FullName;
+                                    string reportFolderPath = Path.Combine(projectDirectory, "Report");
+                                    string reportFileName = "rptJob.rdlc";
+                                    string reportPath = Path.Combine(reportFolderPath, reportFileName);
+                                    reportViewer1.LocalReport.ReportPath = reportPath; // Path of RDLC report file
                                     this.reportViewer1.LocalReport.SetParameters(Jobno);
-                                    // Add your DataSet to the report
-                                    reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); // 'DataSet1' is the name of the dataset in your report
+                                    this.reportViewer1.LocalReport.SetParameters(WOname);
+                                    reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DataSet1", Newtable)); 
 
                                     ExportReportToPdf(reportViewer1, selectedFolderPath);
 
-
+                                    Success_txt.AppendText("Job no " + value + " processed successfully." + Environment.NewLine);
 
                                 }
                                 else if (value == "")
@@ -280,7 +299,7 @@ namespace Excel_Utility
                                     Error_txt.AppendText("Empty Job no detected." + Environment.NewLine);
 
                                 }
-                                else if(!Regex.IsMatch(value, pattern))
+                                else if (!Regex.IsMatch(value, pattern))
                                 {
                                     if (value != "Job")
                                     {
@@ -292,13 +311,16 @@ namespace Excel_Utility
                         }
                     }
 
-                
+                    MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                MessageBox.Show("Report exported to PDF successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-
-                //==============================================================
+                }
             }
+            catch(Exception ex)
+            {
+                Error_txt.AppendText("Could not process input file." + Environment.NewLine);
+
+            }
+            Process.Enabled = true;
 
         }
 
@@ -308,7 +330,7 @@ namespace Excel_Utility
             {
              try
              {
-                // Set processing mode to Local
+                
                 reportViewer.ProcessingMode = ProcessingMode.Local;
 
                 // Render the report to PDF format
