@@ -281,9 +281,9 @@ namespace Excel_Utility {
             
             private global::System.Data.DataColumn columnWorkDate;
             
-            private global::System.Data.DataColumn columnPREmployeeNumber;
-            
             private global::System.Data.DataColumn columnEmployee;
+            
+            private global::System.Data.DataColumn columnPREmployeeNumber;
             
             private global::System.Data.DataColumn columnCostCodeDescription;
             
@@ -340,17 +340,17 @@ namespace Excel_Utility {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn PREmployeeNumberColumn {
+            public global::System.Data.DataColumn EmployeeColumn {
                 get {
-                    return this.columnPREmployeeNumber;
+                    return this.columnEmployee;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn EmployeeColumn {
+            public global::System.Data.DataColumn PREmployeeNumberColumn {
                 get {
-                    return this.columnEmployee;
+                    return this.columnPREmployeeNumber;
                 }
             }
             
@@ -439,12 +439,12 @@ namespace Excel_Utility {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public DataTable2Row AddDataTable2Row(string WorkDate, string PREmployeeNumber, string Employee, string CostCodeDescription, string PayType, string Hours, string WorkPerformedComments, string Job, string WO) {
+            public DataTable2Row AddDataTable2Row(string WorkDate, string Employee, string PREmployeeNumber, string CostCodeDescription, string PayType, string Hours, string WorkPerformedComments, string Job, string WO) {
                 DataTable2Row rowDataTable2Row = ((DataTable2Row)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         WorkDate,
-                        PREmployeeNumber,
                         Employee,
+                        PREmployeeNumber,
                         CostCodeDescription,
                         PayType,
                         Hours,
@@ -474,8 +474,8 @@ namespace Excel_Utility {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             internal void InitVars() {
                 this.columnWorkDate = base.Columns["WorkDate"];
-                this.columnPREmployeeNumber = base.Columns["PREmployeeNumber"];
                 this.columnEmployee = base.Columns["Employee"];
+                this.columnPREmployeeNumber = base.Columns["PREmployeeNumber"];
                 this.columnCostCodeDescription = base.Columns["CostCodeDescription"];
                 this.columnPayType = base.Columns["PayType"];
                 this.columnHours = base.Columns["Hours"];
@@ -489,10 +489,10 @@ namespace Excel_Utility {
             private void InitClass() {
                 this.columnWorkDate = new global::System.Data.DataColumn("WorkDate", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnWorkDate);
-                this.columnPREmployeeNumber = new global::System.Data.DataColumn("PREmployeeNumber", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnPREmployeeNumber);
                 this.columnEmployee = new global::System.Data.DataColumn("Employee", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnEmployee);
+                this.columnPREmployeeNumber = new global::System.Data.DataColumn("PREmployeeNumber", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPREmployeeNumber);
                 this.columnCostCodeDescription = new global::System.Data.DataColumn("CostCodeDescription", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnCostCodeDescription);
                 this.columnPayType = new global::System.Data.DataColumn("PayType", typeof(string), null, global::System.Data.MappingType.Element);
@@ -663,22 +663,6 @@ namespace Excel_Utility {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string PREmployeeNumber {
-                get {
-                    try {
-                        return ((string)(this[this.tableDataTable2.PREmployeeNumberColumn]));
-                    }
-                    catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'PREmployeeNumber\' in table \'DataTable2\' is DBNull.", e);
-                    }
-                }
-                set {
-                    this[this.tableDataTable2.PREmployeeNumberColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string Employee {
                 get {
                     try {
@@ -690,6 +674,22 @@ namespace Excel_Utility {
                 }
                 set {
                     this[this.tableDataTable2.EmployeeColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string PREmployeeNumber {
+                get {
+                    try {
+                        return ((string)(this[this.tableDataTable2.PREmployeeNumberColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'PREmployeeNumber\' in table \'DataTable2\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableDataTable2.PREmployeeNumberColumn] = value;
                 }
             }
             
@@ -803,18 +803,6 @@ namespace Excel_Utility {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public bool IsPREmployeeNumberNull() {
-                return this.IsNull(this.tableDataTable2.PREmployeeNumberColumn);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public void SetPREmployeeNumberNull() {
-                this[this.tableDataTable2.PREmployeeNumberColumn] = global::System.Convert.DBNull;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool IsEmployeeNull() {
                 return this.IsNull(this.tableDataTable2.EmployeeColumn);
             }
@@ -823,6 +811,18 @@ namespace Excel_Utility {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public void SetEmployeeNull() {
                 this[this.tableDataTable2.EmployeeColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsPREmployeeNumberNull() {
+                return this.IsNull(this.tableDataTable2.PREmployeeNumberColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetPREmployeeNumberNull() {
+                this[this.tableDataTable2.PREmployeeNumberColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

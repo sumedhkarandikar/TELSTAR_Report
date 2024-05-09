@@ -16,14 +16,14 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="WorkDate" msprop:Generator_ColumnPropNameInTable="WorkDateColumn" msprop:Generator_ColumnPropNameInRow="WorkDate" msprop:Generator_UserColumnName="WorkDate" msprop:Generator_ColumnVarNameInTable="columnWorkDate" type="xs:string" minOccurs="0" />
-              <xs:element name="PREmployeeNumber" msprop:Generator_ColumnPropNameInTable="PREmployeeNumberColumn" msprop:Generator_ColumnPropNameInRow="PREmployeeNumber" msprop:Generator_UserColumnName="PREmployeeNumber" msprop:Generator_ColumnVarNameInTable="columnPREmployeeNumber" type="xs:string" minOccurs="0" />
               <xs:element name="Employee" msprop:Generator_ColumnPropNameInTable="EmployeeColumn" msprop:Generator_ColumnPropNameInRow="Employee" msprop:Generator_UserColumnName="Employee" msprop:Generator_ColumnVarNameInTable="columnEmployee" type="xs:string" minOccurs="0" />
+              <xs:element name="PREmployeeNumber" msprop:Generator_ColumnPropNameInTable="PREmployeeNumberColumn" msprop:Generator_ColumnPropNameInRow="PREmployeeNumber" msprop:Generator_UserColumnName="PREmployeeNumber" msprop:Generator_ColumnVarNameInTable="columnPREmployeeNumber" type="xs:string" minOccurs="0" />
               <xs:element name="CostCodeDescription" msprop:Generator_ColumnPropNameInTable="CostCodeDescriptionColumn" msprop:Generator_ColumnPropNameInRow="CostCodeDescription" msprop:Generator_UserColumnName="CostCodeDescription" msprop:Generator_ColumnVarNameInTable="columnCostCodeDescription" type="xs:string" minOccurs="0" />
               <xs:element name="PayType" msprop:Generator_ColumnPropNameInTable="PayTypeColumn" msprop:Generator_ColumnPropNameInRow="PayType" msprop:Generator_UserColumnName="PayType" msprop:Generator_ColumnVarNameInTable="columnPayType" type="xs:string" minOccurs="0" />
               <xs:element name="Hours" msprop:Generator_ColumnPropNameInTable="HoursColumn" msprop:Generator_ColumnPropNameInRow="Hours" msprop:Generator_UserColumnName="Hours" msprop:Generator_ColumnVarNameInTable="columnHours" type="xs:string" minOccurs="0" />
               <xs:element name="WorkPerformedComments" msprop:Generator_ColumnPropNameInTable="WorkPerformedCommentsColumn" msprop:Generator_ColumnPropNameInRow="WorkPerformedComments" msprop:Generator_UserColumnName="WorkPerformedComments" msprop:Generator_ColumnVarNameInTable="columnWorkPerformedComments" type="xs:string" minOccurs="0" />
-              <xs:element name="Job" msprop:Generator_ColumnPropNameInRow="Job" msprop:Generator_ColumnPropNameInTable="JobColumn" msprop:Generator_ColumnVarNameInTable="columnJob" msprop:Generator_UserColumnName="Job" type="xs:string" minOccurs="0" />
-              <xs:element name="WO" msprop:Generator_ColumnPropNameInRow="WO" msprop:Generator_ColumnPropNameInTable="WOColumn" msprop:Generator_ColumnVarNameInTable="columnWO" msprop:Generator_UserColumnName="WO" type="xs:string" minOccurs="0" />
+              <xs:element name="Job" msprop:Generator_UserColumnName="Job" msprop:Generator_ColumnPropNameInTable="JobColumn" msprop:Generator_ColumnPropNameInRow="Job" msprop:Generator_ColumnVarNameInTable="columnJob" type="xs:string" minOccurs="0" />
+              <xs:element name="WO" msprop:Generator_UserColumnName="WO" msprop:Generator_ColumnPropNameInTable="WOColumn" msprop:Generator_ColumnPropNameInRow="WO" msprop:Generator_ColumnVarNameInTable="columnWO" type="xs:string" minOccurs="0" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>

@@ -21,12 +21,12 @@
           <DataField>WorkDate</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="PREmployeeNumber">
-          <DataField>PREmployeeNumber</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
         <Field Name="Employee">
           <DataField>Employee</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="PREmployeeNumber">
+          <DataField>PREmployeeNumber</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="CostCodeDescription">

@@ -224,8 +224,8 @@ namespace Excel_Utility
 
                         dt.Merge(dataTable);
                         ChangeColumnHeaders(dt, dt.Columns[0].ColumnName, "WorkDate");
-                        ChangeColumnHeaders(dt, dt.Columns[1].ColumnName, "PREmployeeNumber");
-                        ChangeColumnHeaders(dt, dt.Columns[2].ColumnName, "Employee");
+                        ChangeColumnHeaders(dt, dt.Columns[1].ColumnName, "Employee");
+                        ChangeColumnHeaders(dt, dt.Columns[2].ColumnName, "PREmployeeNumber");
                         ChangeColumnHeaders(dt, dt.Columns[3].ColumnName, "CostCodeDescription");
                         ChangeColumnHeaders(dt, dt.Columns[4].ColumnName, "PayType");
                         ChangeColumnHeaders(dt, dt.Columns[5].ColumnName, "Hours");
