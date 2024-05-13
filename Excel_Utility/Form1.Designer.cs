@@ -184,7 +184,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(604, 569);
+            this.ClientSize = new System.Drawing.Size(596, 569);
             this.Controls.Add(this.reportViewer1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
@@ -200,7 +200,7 @@
             this.Controls.Add(this.Output_btn);
             this.Controls.Add(this.Input_btn);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Excel Utility";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
