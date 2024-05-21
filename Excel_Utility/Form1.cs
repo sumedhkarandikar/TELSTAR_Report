@@ -1,6 +1,10 @@
 ﻿using Microsoft.Reporting.WebForms;
 using Microsoft.Reporting.WinForms;
+using Microsoft.ReportingServices.ReportProcessing.ReportObjectModel;
 using OfficeOpenXml;
+using OfficeOpenXml.Drawing;
+using OfficeOpenXml.Style;
+using OfficeOpenXml.Table;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,18 +15,20 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static OfficeOpenXml.ExcelErrorValue;
+using static WPFViewModelExternalControls.PivotDataGrid;
 
 
 
 
 namespace Excel_Utility
 {
-    public partial class Form1 : Form
+    public partial class Form1 : System.Windows.Forms.Form
     {
         private string selectedFileName;
         private string Job_value;
@@ -43,7 +49,7 @@ namespace Excel_Utility
             openFileDialog.Title = "Select a file";
             openFileDialog.Filter = "Excel Files (*.xls;*.xlsx)|*.xls;*.xlsx";
 
-            
+
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 selectedFileName = openFileDialog.FileName;
@@ -58,7 +64,7 @@ namespace Excel_Utility
 
             folderBrowserDialog.Description = "Select a folder to save the file";
 
-            
+
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
                 selectedFolderPath = folderBrowserDialog.SelectedPath;
@@ -109,9 +115,13 @@ namespace Excel_Utility
             Success_txt.Text = "";
             Error_txt.Text = "";
         }
-       
+
         private void Process_Click(object sender, EventArgs e)
         {
+           // FileInfo templateFile = new FileInfo(selectedFileName);
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            
+
             try
             {
                 Process.Enabled = false;
@@ -145,16 +155,17 @@ namespace Excel_Utility
                         ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
                         ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
 
-                        int[] rowNumber = { 15, 4 };
+                        int[] rowNumber = { 15, 4 ,6};
                         int columnCount = worksheet.Dimension.End.Column;
-                        rowData = new string[columnCount * 2];
+                        rowData = new string[columnCount * 3];
 
                         // Read data from the row into the array
                         for (int col = 1; col <= columnCount; col++)
                         {
                             rowData[col - 1] = worksheet.Cells[rowNumber[0], col].Value?.ToString();
                             rowData[col + worksheet.Dimension.End.Column - 1] = worksheet.Cells[rowNumber[1], col].Value?.ToString();
-
+                            rowData[col + 2*worksheet.Dimension.End.Column - 1] = worksheet.Cells[rowNumber[2], col].Value?.ToString();
+                            
                         }
 
                         string[] modifiedArray = new string[rowData.Length];
@@ -217,10 +228,11 @@ namespace Excel_Utility
                                     dataRow[colu] = worksheet2.Cells[row, col].Value?.ToString();
                                 }
                             }
-
                             dataTable.Rows.Add(dataRow);
                         }
+                        
                         dataSet.Tables.Add(dataTable);
+
 
                         dt.Merge(dataTable);
                         ChangeColumnHeaders(dt, dt.Columns[0].ColumnName, "WorkDate");
@@ -232,7 +244,19 @@ namespace Excel_Utility
                         ChangeColumnHeaders(dt, dt.Columns[6].ColumnName, "WorkPerformedComments");
                         ChangeColumnHeaders(dt, dt.Columns[7].ColumnName, "Job");
                         ChangeColumnHeaders(dt, dt.Columns[8].ColumnName, "WO");
+                        for (int i = 0; i < dt.Rows.Count; i++)
+                        {
+                            string dateTimeString = dt.Rows[i]["WorkDate"].ToString();
+                            DateTime dateTimeValue;
+                            if (DateTime.TryParse(dateTimeString, out dateTimeValue))
+                            {
+                                dt.Rows[i]["WorkDate"] = dateTimeValue.ToString("yyyy-MM-dd"); 
+                            }
+                            
+                        }
 
+
+                        Console.WriteLine(dt);
                     }
 
                     string columnName = dt.Columns[7].ColumnName;
@@ -265,22 +289,132 @@ namespace Excel_Utility
                                     Job_value = value;
 
                                     string targetColumnName = dt.Columns[8].ColumnName;
-                                    string result=null;
+                                    string result = null;
                                     foreach (DataRow Wrow in dt.Rows)
                                     {
                                         if (Convert.ToString(Wrow[columnName]) == value)
                                         {
-                                         result = Convert.ToString(row[targetColumnName]);
-                                         break;
+                                            result = Convert.ToString(row[targetColumnName]);
+                                            break;
+                                        }
+                                    }
+
+
+                                    FileInfo file = new FileInfo(selectedFileName);
+                                    if (!file.Exists)
+                                    {
+                                        throw new FileNotFoundException("Existing Excel file not found.");
+                                    }
+                                    int startRow = 15;
+                                    using (ExcelPackage package = new ExcelPackage(file))
+                                    {
+                                        
+                                        ExcelWorksheet sourceSheet = package.Workbook.Worksheets["Service Field Report"];
+                                        if (sourceSheet == null)
+                                        {
+                                            throw new InvalidOperationException($"Worksheet not found in the existing Excel file.");
                                         }
 
+                                        ExcelWorksheet newSheet = package.Workbook.Worksheets.Add(value, sourceSheet);
+                                        //package.Save();
+
+                                        ExcelWorksheet worksheet = package.Workbook.Worksheets[value]; 
+                                        if (worksheet == null)
+                                        {
+                                            throw new InvalidOperationException("Worksheet not found in the existing Excel file.");
+                                        }
+
+                                        // Copy DataTable column headers to Excel from the specified row
+                                        int columnCount = filteredDataTable.Columns.Count;
+                                        for (int col = 1; col <= columnCount; col++)
+                                        {
+                                            worksheet.Cells[startRow, col].Value = filteredDataTable.Columns[col - 1].ColumnName;
+                                        }
+
+                                        worksheet.Cells["J4"].Value = value;
+                                        worksheet.Cells["J6"].Value = result;
+                                        
+                                        // Copy DataTable data to Excel from the specified row
+                                        int rowCount = filteredDataTable.Rows.Count;
+                                        
+                                        for (int Rrow = 0; Rrow < rowCount; Rrow++)
+                                        {
+                                           
+
+                                            object cellValue1 = filteredDataTable.Rows[Rrow][0];
+                                            worksheet.Cells[startRow + Rrow, 1].Value = cellValue1.ToString();
+                                            ExcelRange cell1 = worksheet.Cells[startRow + Rrow, 1];
+                                            cell1.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell1.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell1.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell1.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                                            object cellValue2 = filteredDataTable.Rows[Rrow][1];
+                                            worksheet.Cells[startRow + Rrow, 2].Value = cellValue2.ToString();
+                                            ExcelRange cell2 = worksheet.Cells[startRow + Rrow, 2];
+                                            cell2.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell2.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell2.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell2.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                                            object cellValue3 = filteredDataTable.Rows[Rrow][2];
+                                            worksheet.Cells[startRow + Rrow, 3].Value = cellValue3.ToString();
+                                            ExcelRange cell3 = worksheet.Cells[startRow + Rrow, 3];
+                                            cell3.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell3.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell3.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell3.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                                            object cellValue4 = filteredDataTable.Rows[Rrow][3];
+                                            worksheet.Cells[startRow + Rrow, 4].Value = cellValue4.ToString();
+                                            ExcelRange cell4 = worksheet.Cells[startRow + Rrow, 4];
+                                            cell4.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell4.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell4.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell4.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                                            object cellValue5 = filteredDataTable.Rows[Rrow][4];
+                                            worksheet.Cells[startRow + Rrow, 5].Value = cellValue5.ToString();
+                                            ExcelRange cell5 = worksheet.Cells[startRow + Rrow, 5];
+                                            cell5.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell5.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell5.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell5.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                                            // Get the value from the 6th column of the filtered DataTable
+                                            object cellValue6 = filteredDataTable.Rows[Rrow][5];
+                                                worksheet.Cells[startRow + Rrow, 6].Value = cellValue6.ToString();
+                                                ExcelRange cell6 = worksheet.Cells[startRow + Rrow, 6];
+                                                cell6.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                                cell6.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                                cell6.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                                cell6.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+
+                                            object cellValue7 = filteredDataTable.Rows[Rrow][6];    
+                                            worksheet.Cells[startRow + Rrow, 7].Value = cellValue7.ToString();
+                                            worksheet.Cells[startRow + Rrow, 7, startRow + Rrow, 13].Merge = true;
+                                            ExcelRange cell7 = worksheet.Cells[startRow + Rrow, 7, startRow + Rrow, 13];
+                                            cell7.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            cell7.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            cell7.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            cell7.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+
+                                        }
+
+                                        package.Save();
                                     }
+                                
+
                                     ReportParameter WOname = new ReportParameter("strWONo", result);
 
                                     reportViewer1 = new ReportViewer();
                                     reportViewer1.ProcessingMode = ProcessingMode.Local;
                                     string executableDirectory = Application.StartupPath;
                                     string projectDirectory = Directory.GetParent(Directory.GetParent(executableDirectory).FullName).FullName;
+                                    //string projectDirectory =executableDirectory;
+
                                     string reportFolderPath = Path.Combine(projectDirectory, "Report");
                                     string reportFileName = "rptJob.rdlc";
                                     string reportPath = Path.Combine(reportFolderPath, reportFileName);
@@ -319,6 +453,9 @@ namespace Excel_Utility
             {
                 Error_txt.AppendText("Could not process input file." + Environment.NewLine);
 
+                MessageBox.Show($"An error occurred while exporting the report to PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
             }
             Process.Enabled = true;
 
@@ -334,6 +471,8 @@ namespace Excel_Utility
                 reportViewer.ProcessingMode = ProcessingMode.Local;
 
                 // Render the report to PDF format
+                byte[] renderedBytes;
+                string[] streams;
                 Warning[] warnings;
                 string[] streamIds;
                 string mimeType;
@@ -351,8 +490,36 @@ namespace Excel_Utility
 
                 // Save the PDF to the specified output file path
                 File.WriteAllBytes(outputFilePath, pdfBytes);
-                
-             }
+
+
+                //renderedBytes = reportViewer.LocalReport.Render(
+                //"Excel", null, out mimeType, out encoding, out fileNameExtension, out streams, out warnings);
+
+                //// Save the rendered report to a file
+                //SaveFileDialog saveFileDialog = new SaveFileDialog();
+                //saveFileDialog.Filter = "Excel Files (*.xls)|*.xls";
+                //saveFileDialog.FileName = "C:\\Users\\prathamesh_bhuvad\\Desktop\\VASP SOLUTIONS\\output\\Report.xlsx"; // You can set a default file name
+                //if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                //{
+                //    using (FileStream fs = new FileStream(saveFileDialog.FileName, FileMode.Create))
+                //    {
+                //        fs.Write(renderedBytes, 0, renderedBytes.Length);
+                //        fs.Close();
+                //    }
+                //}
+
+
+
+
+
+               
+
+
+
+
+
+
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred while exporting the report to PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -378,6 +545,7 @@ namespace Excel_Utility
             return columnName;
         }
 
+        
         static void ChangeColumnHeaders(DataTable dataTable, string oldHeader, string newHeader)
         {
             if (dataTable.Columns.Contains(oldHeader))
