@@ -34,6 +34,7 @@ namespace Excel_Utility
         private string Job_value;
         private string selectedFolderPath;
         private string[] ColumnHead;
+        private string destinationFilePath;
 
         public Form1()
         {
@@ -70,6 +71,7 @@ namespace Excel_Utility
                 selectedFolderPath = folderBrowserDialog.SelectedPath;
                 Folder_Name.Text = selectedFolderPath;
                 Folder_Name.Visible = true;
+                
 
             }
         }
@@ -141,6 +143,17 @@ namespace Excel_Utility
                 }
                 else
                 {
+                    if (!Directory.Exists(selectedFolderPath))
+                    {
+                        Directory.CreateDirectory(selectedFolderPath);
+                    }
+                    string fileName = Path.GetFileName(selectedFileName);
+
+                    // Constructing destination file path
+                    destinationFilePath = Path.Combine(selectedFolderPath, fileName);
+
+                    // Copy the file to the destination
+                    File.Copy(selectedFileName, destinationFilePath, true);
 
                     string filePath = selectedFileName;
 
@@ -300,7 +313,7 @@ namespace Excel_Utility
                                     }
 
 
-                                    FileInfo file = new FileInfo(selectedFileName);
+                                    FileInfo file = new FileInfo(destinationFilePath);
                                     if (!file.Exists)
                                     {
                                         throw new FileNotFoundException("Existing Excel file not found.");
@@ -413,7 +426,7 @@ namespace Excel_Utility
                                     reportViewer1.ProcessingMode = ProcessingMode.Local;
                                     string executableDirectory = Application.StartupPath;
                                     string projectDirectory = Directory.GetParent(Directory.GetParent(executableDirectory).FullName).FullName;
-                                    //string projectDirectory =executableDirectory;
+                                   // string projectDirectory =executableDirectory;
 
                                     string reportFolderPath = Path.Combine(projectDirectory, "Report");
                                     string reportFileName = "rptJob.rdlc";
